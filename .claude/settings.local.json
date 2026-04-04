@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx vitest:*)",
+      "Bash(rm:*)",
+      "Bash(npx tsc:*)",
+      "Bash(wc:*)",
+      "Bash(npx vite:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Read(//Users/parandykt/Apps/Views Review/state-agent/**)",
+      "Read(//tmp/**)",
+      "Bash(__NEW_LINE_50759ce9fb200d7d__)",
+      "WebSearch",
+      "Bash(ls:*)",
+      "Bash(cd \"/Users/parandykt/Apps/Views Review/state-agent/demo-app-sa\" && cp ../demo-app/index.html . && cp -r ../demo-app/public . && cp ../demo-app/src/index.css src/ && cp ../demo-app/src/vite-env.d.ts src/ && cp ../demo-app/src/setupTests.ts src/ 2>/dev/null; mkdir -p src/contexts src/data src/lib src/hooks src/types && cp ../demo-app/src/contexts/AuthContext.tsx src/contexts/ && cp ../demo-app/src/contexts/DataContext.tsx src/contexts/ && cp -r ../demo-app/src/data/* src/data/ && cp ../demo-app/src/lib/supabase.ts src/lib/ && cp ../demo-app/src/lib/supabaseSync.ts src/lib/ && cp ../demo-app/src/lib/qrUrls.ts src/lib/ 2>/dev/null; cp ../demo-app/src/hooks/useTheme.ts src/hooks/ && cp ../demo-app/src/types/index.ts src/types/ && cp ../demo-app/src/types/supabase.ts src/types/ && cp ../demo-app/src/components/AnimatedBanner.tsx src/components/ && cp ../demo-app/src/components/LocalDataBanner.tsx src/components/ && cp ../demo-app/src/components/ModalOverlay.tsx src/components/ && cp ../demo-app/src/components/QRCodeDisplay.tsx src/components/ && cp ../demo-app/src/components/QRScanner.tsx src/components/ && cp ../demo-app/src/components/SkeletonLoading.tsx src/components/ && cp ../demo-app/src/components/ToggleSwitch.tsx src/components/ && echo \"Done copying shared files\")",
+      "Bash(find \"/Users/parandykt/Apps/Views Review/state-agent/demo-app/src/components\" -type f -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\" 2>/dev/null | sort)",
+      "Bash(find \"/Users/parandykt/Apps/Views Review/state-agent/demo-app/src/pages\" -type f -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\" 2>/dev/null | sort)",
+      "Bash(find \"/Users/parandykt/Apps/Views Review/state-agent/demo-app-sa/src/components\" -type f -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\" 2>/dev/null | sort)",
+      "Bash(find \"/Users/parandykt/Apps/Views Review/state-agent/demo-app-sa/src/pages\" -type f -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\" 2>/dev/null | sort)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "tessl"
+  ]
+}

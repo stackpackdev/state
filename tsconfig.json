@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "outDir": "dist",
+    "rootDir": ".",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "state-agent": ["./runtime/core/index.ts"],
+      "state-agent/react": ["./runtime/react/index.ts"],
+      "state-agent/components": ["./runtime/components/index.ts"]
+    }
+  },
+  "include": ["runtime/**/*.ts", "runtime/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}

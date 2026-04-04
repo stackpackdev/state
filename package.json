@@ -1,0 +1,53 @@
+{
+  "name": "state-agent",
+  "version": "0.1.0",
+  "description": "Agent-optimized React state management using Together/Separate/When/Gate primitives",
+  "type": "module",
+  "main": "dist/runtime/core/index.js",
+  "types": "dist/runtime/core/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/runtime/core/index.js",
+      "types": "./dist/runtime/core/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/runtime/react/index.js",
+      "types": "./dist/runtime/react/index.d.ts"
+    },
+    "./components": {
+      "import": "./dist/runtime/components/index.js",
+      "types": "./dist/runtime/components/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "bench": "vitest bench",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "immer": "^10.0.0",
+    "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "benchmark-harness",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "node --import tsx bench-runtime.ts",
+    "report": "node --import tsx report.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.0"
+  }
+}
