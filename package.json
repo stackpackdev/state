@@ -1,6 +1,6 @@
 {
   "name": "stackpack-state",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent-optimized React state management using Together/Separate/When/Gate primitives",
   "type": "module",
   "main": "dist/runtime/core/index.js",
@@ -76,6 +76,7 @@
     "dist/runtime/core/*.d.ts.map",
     "dist/runtime/react",
     "dist/runtime/components",
+    "skill/",
     "README.md",
     "LICENSE"
   ],

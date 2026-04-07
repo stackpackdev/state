@@ -1,157 +1,113 @@
 # stackpack-state
 
-An AI agent that designs and manages app state.
+Agent-first React state management. Schema is the single source of truth — types, validation, transitions, selectors, invariants, and effects all derive from one Zod schema.
 
-You describe what you're building. The agent figures out what state it needs.
-
-## Philosophy
-
-stackpack-state thinks in three dimensions, extracted from the [Views Tools](https://docs.views.tools) framework:
-
-- **Together** — data that moves as a unit belongs in one store (form fields, API data + loading + error)
-- **Separate** — independent concerns get independent stores (auth, features, settings)
-- **When** — every store has declarative conditions (isLoading, isEmpty, isAuthenticated, hasError)
-
-## Quick Start
+## Install
 
 ```bash
 npm install stackpack-state
 ```
 
-## What It Creates
+No other dependencies needed. Zod is bundled — import `z` from `stackpack-state` directly.
 
-Each store is a single file — schema, type, and store in one place.
+> **Note:** Always import `z` from `stackpack-state`, not from your own `zod` package. stackpack-state bundles Zod 4 internally.
 
-```
-src/state/
-  auth.store.ts        — Schema + type + store + when/gates
-  todos.store.ts       — Same pattern, one file per store
-  navigation.flow.ts   — Navigation state machine
-  provider.tsx         — All providers wrapped
-  index.ts             — Barrel exports
-```
+## Philosophy
 
-## Runtime API
+stackpack-state thinks in five primitives:
 
-### Stores (with Zod schemas)
+| Primitive | Question | Rule |
+|-----------|----------|------|
+| **Together** | What data changes as a unit? | Group into one store |
+| **Separate** | What is independent? | Split into separate stores |
+| **When** | What changes appearance? | Style-edge condition (cheap re-render) |
+| **Gate** | What controls mounting? | Mount-edge condition (expensive lifecycle) |
+| **Presence** | What animates in/out? | Deferred unmount (animated lifecycle) |
+
+## Quick Example
 
 ```typescript
-import { z, createStore, createHumanActor, createAgentActor } from 'stackpack-state'
+import { defineStore, z } from 'stackpack-state'
 
-// Schema is the single source of truth
-const todosSchema = z.object({
-  items: z.array(z.object({
-    id: z.string(),
-    text: z.string().min(1),
-    done: z.boolean(),
-  })),
-  filter: z.enum(['all', 'active', 'done']),
-})
-
-type TodosState = z.infer<typeof todosSchema>
-
-const todos = createStore<TodosState>({
+export const todos = defineStore({
   name: 'todos',
-  stateSchema: todosSchema,  // validates initial state + mutations
-  initial: { items: [], filter: 'all' },
+  schema: z.object({
+    items: z.array(z.object({
+      id: z.string(),
+      text: z.string().min(1),
+      done: z.boolean(),
+    })),
+    filter: z.enum(['all', 'active', 'done']),
+  }),
+  initial: { items: [], filter: 'all' as const },
   when: {
-    isEmpty: state => state.items.length === 0,
-    isFiltered: state => state.filter !== 'all',
+    isEmpty: (s) => s.items.length === 0,
+    isFiltered: (s) => s.filter !== 'all',
+  },
+  gates: {
+    hasItems: (s) => s.items.length > 0,
+  },
+  computed: {
+    activeCount: (s) => s.items.filter(i => !i.done).length,
   },
 })
-
-// Every change knows who made it
-const user = createHumanActor('user')
-const ai = createAgentActor({ name: 'assistant' })
-
-todos.set('filter', 'active', user)           // human changed it
-todos.update(d => { d.items.push(item) }, ai)  // agent changed it
-todos.getHistory()                              // see who did what
 ```
 
-### React Hooks
-
 ```typescript
-import { useValue, useChange, useWhen } from 'stackpack-state/react'
+import { useValue, useWhen, useComputed } from 'stackpack-state/react'
 
 function TodoList() {
-  const items = useValue('todos', 'items')
-  const { isEmpty, isFiltered } = useWhen('todos')
-  const change = useChange('todos', user)
+  const items = useValue<Todo[]>('todos', 'items')
+  const { isEmpty } = useWhen('todos')
+  const activeCount = useComputed<number>('todos', 'activeCount')
 
   if (isEmpty) return <Empty />
-  return <List items={items} />
+  return <List items={items} count={activeCount} />
 }
 ```
 
-### Flows (State Machines)
+For type-safe access without generics, use `useSelect`:
 
 ```typescript
-import { createFlow } from 'stackpack-state'
-import { useFlow } from 'stackpack-state/react'
+import { useSelect } from 'stackpack-state/react'
+import { todos } from './state/todos.store'
 
-const checkout = createFlow({
-  name: 'checkout',
-  states: ['Cart', 'Shipping', 'Payment', 'Done'],
-  initial: 'Cart',
-})
-
-function Checkout() {
-  const { current, go, has } = useFlow('checkout')
-  if (has('Cart')) return <Cart onNext={() => go('Shipping', user)} />
-}
+const filter = useSelect('todos', todos.select.filter)  // typed automatically
 ```
 
-### Together (Grouped Stores)
+### Actors (optional)
+
+Every mutation accepts an optional actor. Defaults to a human "user" actor — no boilerplate needed for basic use.
 
 ```typescript
-import { together } from 'stackpack-state'
+// No actor needed for basic use
+todos.store.set('filter', 'active')
+todos.store.update(draft => { draft.items.push(item) })
 
-const checkoutGroup = together({
-  name: 'checkout',
-  stores: { cart: cartStore, shipping: shippingStore },
-  flow: checkoutFlow,
-})
+// Explicit actors for system/agent operations
+import { createAgentActor, createSystemActor } from 'stackpack-state'
+const ai = createAgentActor({ name: 'copilot' })
+todos.store.set('filter', 'active', ai)
 ```
 
-### Middleware
+## Full Documentation
 
-```typescript
-const logger = {
-  name: 'logger',
-  enter: (action, state) => {
-    console.log(`[${action.actor.name}] ${action.type}`)
-    return action  // return null to cancel
-  },
-}
+For the complete API, patterns, and migration guides, see:
 
-const store = createStore({ name: 'app', initial: {}, middleware: [logger] })
+- **[Skill doc](skill/skill.md)** — Full pattern catalog, decision tree, all 12 store patterns
+- **[API reference](skill/api-reference.md)** — Every export from `stackpack-state`, `stackpack-state/react`, and `stackpack-state/components`
+- **[Refactoring guide](skill/refactoring.md)** — Step-by-step migration from useState, Redux, Zustand, Jotai, and XState
+- **[Examples](skill/examples.md)** — Complete real-world app examples
+
+## AI Agent Integration
+
+After `npm install stackpack-state`, the skill doc is available at:
+
+```
+node_modules/stackpack-state/skill/skill.md
 ```
 
-## Agent Commands
-
-| Command | Description |
-|---|---|
-| `stackpack-state init` | Analyze app, design full state architecture |
-| `stackpack-state add "feature"` | Add state for a new feature |
-| `stackpack-state why "store"` | Explain design reasoning |
-| `stackpack-state refactor` | Suggest optimizations |
-| `stackpack-state types` | Regenerate TypeScript types |
-
-## Core Concepts from Views Tools
-
-| Views Pattern | stackpack-state Equivalent |
-|---|---|
-| DataProvider (wrapping related state) | `together()` — group stores |
-| DataContexts (named, lazy contexts) | Named store registry |
-| Immer produce (immutable updates) | `store.update(draft => ...)` |
-| Flow.js (navigation state machine) | `createFlow()` |
-| `when isHovered/isFocused` (scoped conditions) | `when: { isEmpty: ... }` |
-| walk.js (visitor enter/leave) | Middleware pipeline |
-| Touched tracking | Actor attribution on every change |
-| flowDefinition (valid state registry) | Flow schema validation |
-| 25ms buffered dispatch | `batchMs` option |
-| MAX_ACTIONS history | `historyLimit` option |
+Point your AI agent to read this file before writing any state code.
 
 ## Try It: Refactor Your App to stackpack-state
 
@@ -166,8 +122,8 @@ I want to refactor this React app to use stackpack-state for state management. W
 ## Setup
 
 1. Create and check out the branch: `git checkout -b refactor/stackpack-state`
-2. Read AGENTS.md at the root of the stackpack-state repo for framework conventions
-3. Read the skill doc at integrations/claude-code/skill.md for the full pattern catalog
+2. Install: `npm install stackpack-state`
+3. Read the skill doc at node_modules/stackpack-state/skill/skill.md for the full pattern catalog
 
 ## Phase 1: Analyze current state
 
@@ -188,7 +144,7 @@ Apply Together/Separate/When/Gate reasoning:
 - One store per API endpoint — data + loading + error belong together
 - Forms are always together stores — fields + submitting + errors
 
-Create stores in `src/state/` using the single-file pattern:
+Create stores in `src/state/` using `defineStore` (not `createStore`):
 ```typescript
 import { defineStore, z } from 'stackpack-state'
 
@@ -201,6 +157,12 @@ export const storeName = defineStore({
   computed: { /* derived values that other components need */ },
 })
 ```
+
+Additional store options to consider:
+- If the old store persists to localStorage → add `persist` option
+- If the old store has debounced side effects → add `effects`
+- If the old store has undo → add `undo: { limit: N }`
+- If the store has loading/pagination patterns → use `composeStore` with `Loadable`/`Paginated` from `stackpack-state/components`
 
 ## Phase 3: Create actions
 
@@ -224,10 +186,11 @@ For each component:
 2. Add `useValue`, `useComputed`, `useWhen`, `useGate` hooks from `stackpack-state/react`
 3. Import and call actions directly instead of receiving callbacks as props
 4. Keep all local UI state (useState for modals, forms, toggles) — only lift shared state to stores
+5. If a component must stay mounted for state preservation (canvas, video, scroll position), use `useWhen` + `style={{ display: condition ? undefined : 'none' }}`, not `<Gated>` which would unmount it
 
 Hook patterns:
 ```typescript
-import { useValue, useWhen, useComputed } from 'stackpack-state/react'
+import { useValue, useWhen, useComputed, useSelect } from 'stackpack-state/react'
 import { someAction } from '../state'
 
 function MyComponent() {
@@ -242,12 +205,17 @@ function MyComponent() {
 }
 ```
 
+In React components, import the typed store reference directly.
+In effects, server actions, or imperative callbacks, `getStore()` is
+acceptable for reading current snapshots.
+
 ## Phase 5: Wire up App.tsx
 
 1. Wrap the app in `<MultiStoreProvider stores={[...allStores]}>` (not single StoreProvider)
-2. Remove all old context providers that were replaced by stores
-3. Remove all prop drilling from route definitions — components read from stores directly
-4. App.tsx should be mostly routing + provider setup
+2. Place MultiStoreProvider inside any auth/session providers but outside route components, so stores are available everywhere but can access session context if needed
+3. Remove all old context providers that were replaced by stores
+4. Remove all prop drilling from route definitions — components read from stores directly
+5. App.tsx should be mostly routing + provider setup
 
 ## Phase 6: Vite/bundler config
 
@@ -265,8 +233,8 @@ resolve: {
 ## Phase 7: Verify
 
 1. Run `npx tsc --noEmit` — fix all type errors
-2. Run the dev server — verify the app renders identically to the original
-3. Run existing tests — fix any broken imports
+2. If a test suite exists, run it too. Stop on the first failure and fix before continuing.
+3. Run the dev server — verify the app renders identically to the original
 4. Commit with a clear message describing what was refactored
 
 ## What NOT to do
@@ -275,7 +243,7 @@ resolve: {
 - Don't change CSS classes or styling
 - Don't refactor component structure — only change state access
 - Don't create a store for useState that lives in a single component
-- Don't use `getStore('name')` — import the typed store reference directly
+- Don't use `getStore('name')` in components — import the typed store reference directly
 - Don't forget the second argument to `completeQuest`-style actions — stackpack-state actions are self-contained, they take all needed data as parameters
 ```
 

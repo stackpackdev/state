@@ -885,6 +885,46 @@ Need state?
     └── Multiple stores change atomically → together()
 ```
 
+## Mounted-but-Hidden Pattern (display:none)
+
+`<Gated>` unmounts components when the gate closes. If a component must stay mounted for state preservation (canvas, video, scroll position, tab panels), use `useWhen` with display toggling instead:
+
+```tsx
+function TabPanel({ name, children }: { name: string; children: React.ReactNode }) {
+  const isActive = useWhen('editor').isActive
+
+  return (
+    <div style={{ display: isActive ? undefined : 'none' }}>
+      {children}
+    </div>
+  )
+}
+```
+
+**Rule**: If the user will *see* the element disappear with animation, use `<Presence>`. If it's a structural gate (auth, data loading), use `<Gated>`. If the component must stay mounted, use `useWhen` + `display:none`.
+
+---
+
+## Together: Principle vs Function
+
+**Together (the principle)**: group related fields that mutate in the same user action into one store. This is the design rule.
+
+**`together()` (the function)**: coordinates multiple stores that operate as a unit, optionally with a flow. This is for cases where you have separate stores that need to act in concert:
+
+```typescript
+import { together } from 'stackpack-state'
+
+const checkoutGroup = together({
+  name: 'checkout',
+  stores: { cart: cartStore, shipping: shippingStore },
+  flow: checkoutFlow,
+})
+```
+
+Most apps only need the principle. Use the function when you have multiple stores that share a flow or need atomic cross-store operations.
+
+---
+
 ## Key Rules
 
 1. **Actor is optional** — `store.set('path', value)` works without an actor (defaults to a human "user" actor). Explicit actors for system/agent operations: `store.set('path', value, systemActor)`
@@ -902,4 +942,5 @@ Need state?
    // RIGHT: self-contained
    export function completeQuest(id: string, points: number) { ... }
    ```
-10. **Import stores directly, never use getStore()** — `getStore()` returns untyped `Store<unknown>`. Import the `defineStore` result: `import { todos } from './todos.store'`
+10. **Import stores directly in components** — `getStore()` returns untyped `Store<unknown>`. In React components, import the `defineStore` result: `import { todos } from './todos.store'`. In effects, server actions, or imperative callbacks outside React's render cycle, `getStore()` is acceptable for reading current snapshots.
+11. **Import `z` from `stackpack-state`** — Zod is bundled. Do not import from a separate `zod` package, which may be a different version.
