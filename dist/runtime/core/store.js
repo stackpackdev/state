@@ -7,7 +7,7 @@
 import { produce } from 'immer';
 import { z } from 'zod';
 import { getPath, setPath, deletePath, hasPath } from './path.js';
-import { canAct } from './actor.js';
+import { canAct, getDefaultActor } from './actor.js';
 import { createHistory } from './history.js';
 import { createMiddlewarePipeline } from './middleware.js';
 import { createWhenEvaluator, createGateEvaluator } from './when.js';
@@ -334,9 +334,10 @@ export function createStore(options) {
             return getPath(state, path);
         },
         set(path, value, actor) {
-            if (!canAct(actor, 'write', path)) {
+            const resolved = actor ?? getDefaultActor();
+            if (!canAct(resolved, 'write', path)) {
                 if (process.env.NODE_ENV === 'development') {
-                    console.warn(`[state-agent] Actor "${actor.name}" denied write to "${path}" in store "${name}"`);
+                    console.warn(`[state-agent] Actor "${resolved.name}" denied write to "${path}" in store "${name}"`);
                 }
                 return;
             }
@@ -345,14 +346,15 @@ export function createStore(options) {
                 type: 'SET',
                 path,
                 value,
-                actor,
+                actor: resolved,
                 timestamp: Date.now(),
             });
         },
         update(fn, actor) {
-            if (!canAct(actor, 'write', '*')) {
+            const resolved = actor ?? getDefaultActor();
+            if (!canAct(resolved, 'write', '*')) {
                 if (process.env.NODE_ENV === 'development') {
-                    console.warn(`[state-agent] Actor "${actor.name}" denied update in store "${name}"`);
+                    console.warn(`[state-agent] Actor "${resolved.name}" denied update in store "${name}"`);
                 }
                 return;
             }
@@ -360,23 +362,25 @@ export function createStore(options) {
                 id: createActionId(),
                 type: 'SET_FN',
                 fn,
-                actor,
+                actor: resolved,
                 timestamp: Date.now(),
             });
         },
         reset(value, actor) {
+            const resolved = actor ?? getDefaultActor();
             dispatch({
                 id: createActionId(),
                 type: 'RESET',
                 value,
-                actor,
+                actor: resolved,
                 timestamp: Date.now(),
             });
         },
         delete(path, actor) {
-            if (!canAct(actor, 'delete', path)) {
+            const resolved = actor ?? getDefaultActor();
+            if (!canAct(resolved, 'delete', path)) {
                 if (process.env.NODE_ENV === 'development') {
-                    console.warn(`[state-agent] Actor "${actor.name}" denied delete at "${path}" in store "${name}"`);
+                    console.warn(`[state-agent] Actor "${resolved.name}" denied delete at "${path}" in store "${name}"`);
                 }
                 return;
             }
@@ -384,7 +388,7 @@ export function createStore(options) {
                 id: createActionId(),
                 type: 'DELETE',
                 path,
-                actor,
+                actor: resolved,
                 timestamp: Date.now(),
             });
         },

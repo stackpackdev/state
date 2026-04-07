@@ -1,6 +1,6 @@
-# Refactoring to state-agent
+# Refactoring to stackpack-state
 
-Step-by-step migration guides for moving existing React projects to state-agent.
+Step-by-step migration guides for moving existing React projects to stackpack-state.
 
 ---
 
@@ -48,7 +48,7 @@ function TodoApp() {
 
 ```typescript
 // src/state/todos.store.ts
-import { defineStore, z, createSystemActor } from 'state-agent'
+import { defineStore, z, createSystemActor } from 'stackpack-state'
 
 const TodoSchema = z.object({ id: z.string(), text: z.string(), done: z.boolean() })
 
@@ -182,9 +182,9 @@ update(draft => { draft.items.push(newTodo) })     // same Immer syntax as RTK
 change('filter', 'active')                          // direct path set
 ```
 
-### Migration Mapping (Redux → state-agent)
+### Migration Mapping (Redux → stackpack-state)
 
-| Redux Concept | state-agent Equivalent |
+| Redux Concept | stackpack-state Equivalent |
 |--------------|----------------------|
 | `createSlice` | `defineStore` |
 | `initialState` | `initial` |
@@ -259,9 +259,9 @@ const update = useUpdate<TodosState>('todos')
 update(draft => { draft.items.push(newTodo) })
 ```
 
-### Migration Mapping (Zustand → state-agent)
+### Migration Mapping (Zustand → stackpack-state)
 
-| Zustand Concept | state-agent Equivalent |
+| Zustand Concept | stackpack-state Equivalent |
 |----------------|----------------------|
 | `create((set, get) => ({...}))` | `defineStore({ schema, initial })` |
 | `set(partial)` | `store.set(path, value, actor)` |
@@ -328,7 +328,7 @@ export const todos = defineStore({
 
 ### Key Difference
 
-Jotai's atoms are bottom-up (compose small atoms into derived atoms). state-agent is top-down (declare the schema, derive everything from it). The migration strategy:
+Jotai's atoms are bottom-up (compose small atoms into derived atoms). stackpack-state is top-down (declare the schema, derive everything from it). The migration strategy:
 
 1. Group atoms that change together → one store
 2. Derived atoms (`atom((get) => ...)`) → `computed`
@@ -387,7 +387,7 @@ export const checkoutFlow = createFlow({
 
 ### When to use which
 
-| XState Feature | state-agent Equivalent |
+| XState Feature | stackpack-state Equivalent |
 |---------------|----------------------|
 | Simple state machine (few states, no data) | `createFlow` |
 | State machine with data per state | Discriminated union + `transitions` |

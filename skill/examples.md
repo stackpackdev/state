@@ -1,4 +1,4 @@
-# state-agent Examples
+# stackpack-state Examples
 
 Real-world examples showing how to implement common app patterns.
 
@@ -10,7 +10,7 @@ Real-world examples showing how to implement common app patterns.
 
 ```typescript
 // src/state/todos.store.ts
-import { defineStore, z } from 'state-agent'
+import { defineStore, z } from 'stackpack-state'
 
 const TodoSchema = z.object({
   id: z.string(),
@@ -59,7 +59,7 @@ export const todos = defineStore({
 
 ```tsx
 // src/components/TodoApp.tsx
-import { useStore, useComputed, useGate, Gated } from 'state-agent/react'
+import { useStore, useComputed, useGate, Gated } from 'stackpack-state/react'
 import type { Todo } from '../state/todos.store'
 
 export function TodoApp() {
@@ -145,7 +145,7 @@ function UndoControls() {
 
 ```typescript
 // src/state/auth.store.ts
-import { defineStore, z, createSystemActor } from 'state-agent'
+import { defineStore, z, createSystemActor } from 'stackpack-state'
 
 const UserSchema = z.object({ id: z.string(), name: z.string(), email: z.string(), role: z.enum(['admin', 'user']) })
 
@@ -175,8 +175,8 @@ export const auth = defineStore({
 })
 
 // src/state/dashboard.store.ts
-import { defineStore, z } from 'state-agent'
-import { composeStore, Loadable } from 'state-agent/components'
+import { defineStore, z } from 'stackpack-state'
+import { composeStore, Loadable } from 'stackpack-state/components'
 
 const StatSchema = z.object({ label: z.string(), value: z.number(), trend: z.number() })
 
@@ -214,7 +214,7 @@ export const dashboard = composeStore({
 
 ```tsx
 // src/App.tsx
-import { Gated } from 'state-agent/react'
+import { Gated } from 'stackpack-state/react'
 
 export function App() {
   return (
@@ -249,7 +249,7 @@ function DashboardPage() {
 
 ```typescript
 // src/state/checkout.store.ts
-import { defineStore, z, createSystemActor } from 'state-agent'
+import { defineStore, z, createSystemActor } from 'stackpack-state'
 
 const ItemSchema = z.object({ id: z.string(), name: z.string(), price: z.number(), qty: z.number() })
 const AddressSchema = z.object({ street: z.string(), city: z.string(), zip: z.string() })
@@ -300,7 +300,7 @@ export const checkout = defineStore({
 
 ```tsx
 // src/components/Checkout.tsx
-import { Gated, useStore } from 'state-agent/react'
+import { Gated, useStore } from 'stackpack-state/react'
 
 export function Checkout() {
   return (
@@ -340,7 +340,7 @@ function CartStep() {
 
 ```typescript
 // src/state/search.store.ts
-import { defineStore, z, createSystemActor } from 'state-agent'
+import { defineStore, z, createSystemActor } from 'stackpack-state'
 
 const ResultSchema = z.object({
   id: z.string(),
@@ -398,7 +398,7 @@ export const search = defineStore({
 
 ```tsx
 // src/components/Search.tsx
-import { useStore, useWhen, Gated } from 'state-agent/react'
+import { useStore, useWhen, Gated } from 'stackpack-state/react'
 
 export function SearchPage() {
   const { change } = useStore('search')
@@ -429,7 +429,7 @@ export function SearchPage() {
 ```typescript
 // src/actions/todos.ts
 import { todos } from '../state/todos.store'
-import { getDefaultActor } from 'state-agent'
+import { getDefaultActor } from 'stackpack-state'
 
 export async function toggleTodo(id: string) {
   const result = await todos.store.optimistic({
@@ -471,8 +471,8 @@ export async function deleteTodo(id: string) {
 
 ```typescript
 // src/state/users-table.store.ts
-import { z } from 'state-agent'
-import { composeStore, Loadable, Paginated, Filterable, Selectable } from 'state-agent/components'
+import { z } from 'stackpack-state'
+import { composeStore, Loadable, Paginated, Filterable, Selectable } from 'stackpack-state/components'
 
 const UserRowSchema = z.object({
   id: z.string(),
@@ -533,7 +533,7 @@ export { search } from './search.store'
 export { checkout } from './checkout.store'
 
 // src/state/provider.tsx
-import { MultiStoreProvider } from 'state-agent/react'
+import { MultiStoreProvider } from 'stackpack-state/react'
 import { auth, todos, search, checkout } from './index'
 
 export function StateProvider({ children }: { children: React.ReactNode }) {

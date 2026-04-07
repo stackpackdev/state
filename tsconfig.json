@@ -17,9 +17,9 @@
     "resolveJsonModule": true,
     "jsx": "react-jsx",
     "paths": {
-      "state-agent": ["./runtime/core/index.ts"],
-      "state-agent/react": ["./runtime/react/index.ts"],
-      "state-agent/components": ["./runtime/components/index.ts"]
+      "stackpack-state": ["./runtime/core/index.ts"],
+      "stackpack-state/react": ["./runtime/react/index.ts"],
+      "stackpack-state/components": ["./runtime/components/index.ts"]
     }
   },
   "include": ["runtime/**/*.ts", "runtime/**/*.tsx"],

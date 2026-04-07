@@ -1,10 +1,10 @@
-# state-agent
+# stackpack-state
 
 React state management framework optimized for AI agents. Not an agent itself — a framework that any agent uses to build and manage app state.
 
 ## What It Is
 
-A runtime library (`npm install state-agent`) with 5 reasoning primitives:
+A runtime library (`npm install stackpack-state`) with 5 reasoning primitives:
 
 - **Together**: Data that changes as a unit shares a store
 - **Separate**: Independent concerns get separate stores
@@ -15,8 +15,8 @@ A runtime library (`npm install state-agent`) with 5 reasoning primitives:
 ## Architecture
 
 ```
-state-agent/           → core runtime (createStore, actors, flows, fetchers)
-state-agent/react      → React bindings (hooks, providers, <Gated>)
+stackpack-state/           → core runtime (createStore, actors, flows, fetchers)
+stackpack-state/react      → React bindings (hooks, providers, <Gated>)
 ```
 
 ## File Conventions
@@ -31,7 +31,7 @@ state-agent/react      → React bindings (hooks, providers, <Gated>)
 ## Store Template
 
 ```typescript
-import { defineStore, z } from 'state-agent'
+import { defineStore, z } from 'stackpack-state'
 
 export const name = defineStore({
   name: 'name',
@@ -68,8 +68,8 @@ export const name = defineStore({
 
 ## Install Troubleshooting
 
-- **npm name collision**: `npm install state-agent` installs the wrong package. Use local path: `npm install ../state-agent`
-- **Vite alias order**: `state-agent/react` alias must come BEFORE `state-agent` (use array form, not object)
+- **npm name collision**: `npm install stackpack-state` installs the wrong package. Use local path: `npm install ../stackpack-state`
+- **Vite alias order**: `stackpack-state/react` alias must come BEFORE `stackpack-state` (use array form, not object)
 - **React dual-instance errors**: Pin `react` and `react-dom` in `resolve.alias` to your app's `node_modules/`
 - **Persist + manual hydration conflict**: Don't manually `localStorage.getItem()` if using `persist` option — it hydrates automatically
 

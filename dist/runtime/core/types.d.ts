@@ -84,14 +84,14 @@ export interface Store<T = any> {
     getState(): T;
     /** Path-based read — from Data.js lodash get pattern */
     get<V = unknown>(path?: string): V;
-    /** Path-based write — requires actor attribution */
-    set(path: string, value: unknown, actor: Actor): void;
-    /** Immer mutation — from Data.js produce(set) pattern */
-    update(fn: (draft: T) => void, actor: Actor): void;
-    /** Reset to new value — from Data.js RESET action */
-    reset(value: T, actor: Actor): void;
-    /** Delete a path from state — requires actor attribution */
-    delete(path: string, actor: Actor): void;
+    /** Path-based write — actor optional (falls back to default human actor) */
+    set(path: string, value: unknown, actor?: Actor): void;
+    /** Immer mutation — actor optional (falls back to default human actor) */
+    update(fn: (draft: T) => void, actor?: Actor): void;
+    /** Reset to new value — actor optional (falls back to default human actor) */
+    reset(value: T, actor?: Actor): void;
+    /** Delete a path from state — actor optional (falls back to default human actor) */
+    delete(path: string, actor?: Actor): void;
     /** Subscribe to changes — from Data.js listener system */
     subscribe(listener: Listener<T>, path?: string): Unsubscribe;
     /** Check flow state — from Flow.js has() pattern */

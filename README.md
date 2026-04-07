@@ -1,4 +1,4 @@
-# state-agent
+# stackpack-state
 
 An AI agent that designs and manages app state.
 
@@ -6,7 +6,7 @@ You describe what you're building. The agent figures out what state it needs.
 
 ## Philosophy
 
-state-agent thinks in three dimensions, extracted from the [Views Tools](https://docs.views.tools) framework:
+stackpack-state thinks in three dimensions, extracted from the [Views Tools](https://docs.views.tools) framework:
 
 - **Together** — data that moves as a unit belongs in one store (form fields, API data + loading + error)
 - **Separate** — independent concerns get independent stores (auth, features, settings)
@@ -15,14 +15,7 @@ state-agent thinks in three dimensions, extracted from the [Views Tools](https:/
 ## Quick Start
 
 ```bash
-# Install
-npm install state-agent
-
-# Let the agent design your state
-npx state-agent init
-
-# Add state for a new feature
-npx state-agent add "shopping cart"
+npm install stackpack-state
 ```
 
 ## What It Creates
@@ -43,7 +36,7 @@ src/state/
 ### Stores (with Zod schemas)
 
 ```typescript
-import { z, createStore, createHumanActor, createAgentActor } from 'state-agent'
+import { z, createStore, createHumanActor, createAgentActor } from 'stackpack-state'
 
 // Schema is the single source of truth
 const todosSchema = z.object({
@@ -79,7 +72,7 @@ todos.getHistory()                              // see who did what
 ### React Hooks
 
 ```typescript
-import { useValue, useChange, useWhen } from 'state-agent/react'
+import { useValue, useChange, useWhen } from 'stackpack-state/react'
 
 function TodoList() {
   const items = useValue('todos', 'items')
@@ -94,8 +87,8 @@ function TodoList() {
 ### Flows (State Machines)
 
 ```typescript
-import { createFlow } from 'state-agent'
-import { useFlow } from 'state-agent/react'
+import { createFlow } from 'stackpack-state'
+import { useFlow } from 'stackpack-state/react'
 
 const checkout = createFlow({
   name: 'checkout',
@@ -112,7 +105,7 @@ function Checkout() {
 ### Together (Grouped Stores)
 
 ```typescript
-import { together } from 'state-agent'
+import { together } from 'stackpack-state'
 
 const checkoutGroup = together({
   name: 'checkout',
@@ -139,15 +132,15 @@ const store = createStore({ name: 'app', initial: {}, middleware: [logger] })
 
 | Command | Description |
 |---|---|
-| `state-agent init` | Analyze app, design full state architecture |
-| `state-agent add "feature"` | Add state for a new feature |
-| `state-agent why "store"` | Explain design reasoning |
-| `state-agent refactor` | Suggest optimizations |
-| `state-agent types` | Regenerate TypeScript types |
+| `stackpack-state init` | Analyze app, design full state architecture |
+| `stackpack-state add "feature"` | Add state for a new feature |
+| `stackpack-state why "store"` | Explain design reasoning |
+| `stackpack-state refactor` | Suggest optimizations |
+| `stackpack-state types` | Regenerate TypeScript types |
 
 ## Core Concepts from Views Tools
 
-| Views Pattern | state-agent Equivalent |
+| Views Pattern | stackpack-state Equivalent |
 |---|---|
 | DataProvider (wrapping related state) | `together()` — group stores |
 | DataContexts (named, lazy contexts) | Named store registry |
@@ -160,20 +153,20 @@ const store = createStore({ name: 'app', initial: {}, middleware: [logger] })
 | 25ms buffered dispatch | `batchMs` option |
 | MAX_ACTIONS history | `historyLimit` option |
 
-## Try It: Refactor Your App to state-agent
+## Try It: Refactor Your App to stackpack-state
 
-Copy the prompt below into Claude Code (or any AI agent) from inside your React project to refactor it onto state-agent. The agent will work on a branch so your main code is untouched.
+Copy the prompt below into Claude Code (or any AI agent) from inside your React project to refactor it onto stackpack-state. The agent will work on a branch so your main code is untouched.
 
 <details>
 <summary><strong>Refactor prompt (click to expand)</strong></summary>
 
 ```
-I want to refactor this React app to use state-agent for state management. Work on a new branch called `refactor/state-agent`.
+I want to refactor this React app to use stackpack-state for state management. Work on a new branch called `refactor/stackpack-state`.
 
 ## Setup
 
-1. Create and check out the branch: `git checkout -b refactor/state-agent`
-2. Read AGENTS.md at the root of the state-agent repo for framework conventions
+1. Create and check out the branch: `git checkout -b refactor/stackpack-state`
+2. Read AGENTS.md at the root of the stackpack-state repo for framework conventions
 3. Read the skill doc at integrations/claude-code/skill.md for the full pattern catalog
 
 ## Phase 1: Analyze current state
@@ -197,7 +190,7 @@ Apply Together/Separate/When/Gate reasoning:
 
 Create stores in `src/state/` using the single-file pattern:
 ```typescript
-import { defineStore, z } from 'state-agent'
+import { defineStore, z } from 'stackpack-state'
 
 export const storeName = defineStore({
   name: 'storeName',
@@ -228,13 +221,13 @@ CRITICAL RULES:
 
 For each component:
 1. Remove state props from the interface
-2. Add `useValue`, `useComputed`, `useWhen`, `useGate` hooks from `state-agent/react`
+2. Add `useValue`, `useComputed`, `useWhen`, `useGate` hooks from `stackpack-state/react`
 3. Import and call actions directly instead of receiving callbacks as props
 4. Keep all local UI state (useState for modals, forms, toggles) — only lift shared state to stores
 
 Hook patterns:
 ```typescript
-import { useValue, useWhen, useComputed } from 'state-agent/react'
+import { useValue, useWhen, useComputed } from 'stackpack-state/react'
 import { someAction } from '../state'
 
 function MyComponent() {
@@ -258,13 +251,13 @@ function MyComponent() {
 
 ## Phase 6: Vite/bundler config
 
-If using Vite with local state-agent (not npm):
+If using Vite with local stackpack-state (not npm):
 ```typescript
 // vite.config.ts — array form, specific path FIRST
 resolve: {
   alias: [
-    { find: 'state-agent/react', replacement: resolve(__dirname, 'path/to/runtime/react/index.ts') },
-    { find: 'state-agent', replacement: resolve(__dirname, 'path/to/runtime/core/index.ts') },
+    { find: 'stackpack-state/react', replacement: resolve(__dirname, 'path/to/runtime/react/index.ts') },
+    { find: 'stackpack-state', replacement: resolve(__dirname, 'path/to/runtime/core/index.ts') },
   ],
 },
 ```
@@ -283,7 +276,7 @@ resolve: {
 - Don't refactor component structure — only change state access
 - Don't create a store for useState that lives in a single component
 - Don't use `getStore('name')` — import the typed store reference directly
-- Don't forget the second argument to `completeQuest`-style actions — state-agent actions are self-contained, they take all needed data as parameters
+- Don't forget the second argument to `completeQuest`-style actions — stackpack-state actions are self-contained, they take all needed data as parameters
 ```
 
 </details>

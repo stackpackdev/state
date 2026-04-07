@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import { type ComponentType } from 'react';
 export interface ComponentContract {
     /** Store data this component reads */
     reads: Record<string, {
@@ -16,10 +16,17 @@ export interface ComponentContract {
         gate: string;
     }[];
 }
+/** Enable/disable dev-mode contract validation. Called automatically in withContract when NODE_ENV=development. */
+export declare function setDevValidation(enabled: boolean): void;
+/**
+ * Called by hooks (useStore, useValue, etc.) to report a store read.
+ * In dev mode with an active contract, warns if the read is not declared.
+ */
+export declare function reportStoreRead(storeName: string, path?: string): void;
 /**
  * Wrap a React component with a data contract.
  * Registers the contract for agent introspection.
- * Zero runtime overhead — returns the component unchanged.
+ * In development, wraps the component to validate store reads against the contract.
  */
 export declare function withContract<P extends Record<string, unknown>>(contract: ComponentContract, component: ComponentType<P>): ComponentType<P>;
 /** Get all registered contracts for agent introspection */

@@ -1,13 +1,13 @@
-# state-agent API Reference
+# stackpack-state API Reference
 
 Complete reference for every export. Import paths:
-- `state-agent` — core runtime (Node.js, browser, any JS)
-- `state-agent/react` — React hooks and components
-- `state-agent/components` — ECS-style composable state components
+- `stackpack-state` — core runtime (Node.js, browser, any JS)
+- `stackpack-state/react` — React hooks and components
+- `stackpack-state/components` — ECS-style composable state components
 
 ---
 
-## Core: `state-agent`
+## Core: `stackpack-state`
 
 ### defineStore
 
@@ -444,7 +444,7 @@ interface Together {
 
 ---
 
-## React: `state-agent/react`
+## React: `stackpack-state/react`
 
 ### Hooks
 
@@ -520,12 +520,12 @@ interface UseFetchResult<T> {
 
 ---
 
-## Components: `state-agent/components`
+## Components: `stackpack-state/components`
 
 ### Pre-built Components
 
 ```typescript
-import { Loadable, Paginated, Filterable, Selectable, composeStore } from 'state-agent/components'
+import { Loadable, Paginated, Filterable, Selectable, composeStore } from 'stackpack-state/components'
 ```
 
 | Component | Schema Fields | Conditions |

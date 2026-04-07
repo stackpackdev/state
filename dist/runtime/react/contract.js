@@ -1,16 +1,77 @@
 // Component Binding Contracts
 // Declares which store data a React component reads, which actions it calls,
 // and which gates control its mounting. Machine-readable for agent impact analysis.
+//
+// Dev-mode validation: when NODE_ENV=development, withContract wraps the component
+// to track actual store reads and warn when reads occur outside the declared contract.
+import { createElement, useEffect, useRef } from 'react';
 // ─── Registry ────────────────────────────────────────────────
 const contractRegistry = new Map();
+// ─── Dev-mode validation tracking ────────────────────────────
+let devValidationEnabled = false;
+let activeComponentName = null;
+let activeContract = null;
+const undeclaredReads = new Set();
+/** Enable/disable dev-mode contract validation. Called automatically in withContract when NODE_ENV=development. */
+export function setDevValidation(enabled) {
+    devValidationEnabled = enabled;
+}
+/**
+ * Called by hooks (useStore, useValue, etc.) to report a store read.
+ * In dev mode with an active contract, warns if the read is not declared.
+ */
+export function reportStoreRead(storeName, path) {
+    if (!devValidationEnabled || !activeContract || !activeComponentName)
+        return;
+    const readPath = path ?? '*';
+    const key = `${storeName}:${readPath}`;
+    if (undeclaredReads.has(key))
+        return; // already warned
+    const isDeclared = Object.values(activeContract.reads).some(r => {
+        if (r.store !== storeName)
+            return false;
+        if (!path)
+            return true; // reading whole store, any declaration for this store counts
+        return (r.path === path ||
+            r.path === '*' ||
+            path.startsWith(r.path + '.') ||
+            r.path.startsWith(path + '.'));
+    });
+    if (!isDeclared) {
+        undeclaredReads.add(key);
+        console.warn(`[state-agent] Contract violation: <${activeComponentName}> reads "${storeName}${path ? '.' + path : ''}" ` +
+            `but this path is not declared in its contract. Declared reads: ${JSON.stringify(activeContract.reads)}`);
+    }
+}
 /**
  * Wrap a React component with a data contract.
  * Registers the contract for agent introspection.
- * Zero runtime overhead — returns the component unchanged.
+ * In development, wraps the component to validate store reads against the contract.
  */
 export function withContract(contract, component) {
     const name = component.displayName || component.name || 'Anonymous';
     contractRegistry.set(name, contract);
+    // In dev mode, wrap to track reads
+    if (process.env.NODE_ENV === 'development') {
+        devValidationEnabled = true;
+        const Wrapper = (props) => {
+            const prevComponent = useRef(null);
+            const prevContract = useRef(null);
+            // Set active context before render
+            prevComponent.current = activeComponentName;
+            prevContract.current = activeContract;
+            activeComponentName = name;
+            activeContract = contract;
+            // Restore after render via microtask (hooks fire synchronously during render)
+            useEffect(() => {
+                activeComponentName = prevComponent.current;
+                activeContract = prevContract.current;
+            });
+            return createElement(component, props);
+        };
+        Wrapper.displayName = `Contract(${name})`;
+        return Wrapper;
+    }
     return component;
 }
 /** Get all registered contracts for agent introspection */

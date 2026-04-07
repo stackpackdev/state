@@ -1,5 +1,5 @@
 {
-  "name": "state-agent",
+  "name": "stackpack-state",
   "version": "0.1.0",
   "description": "Agent-optimized React state management using Together/Separate/When/Gate primitives",
   "type": "module",
@@ -22,9 +22,33 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest",
+    "test": "vitest run --exclude 'demo-app/**' --exclude 'demo-app-sa/**' --exclude 'demo-app-sa-in-folder-refactor/**'",
     "bench": "vitest bench",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "state-management",
+    "react",
+    "ai",
+    "agent",
+    "zod",
+    "immer",
+    "state-machine",
+    "stackpack",
+    "developer-tools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stackpackdev/state.git"
+  },
+  "homepage": "https://github.com/stackpackdev/state",
+  "bugs": {
+    "url": "https://github.com/stackpackdev/state/issues"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "immer": "^10.0.0",
@@ -46,8 +70,14 @@
     "vitest": "^2.0.0"
   },
   "files": [
-    "dist",
-    "README.md"
+    "dist/runtime/core/*.js",
+    "dist/runtime/core/*.js.map",
+    "dist/runtime/core/*.d.ts",
+    "dist/runtime/core/*.d.ts.map",
+    "dist/runtime/react",
+    "dist/runtime/components",
+    "README.md",
+    "LICENSE"
   ],
   "license": "MIT"
 }

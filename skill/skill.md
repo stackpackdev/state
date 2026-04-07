@@ -1,4 +1,4 @@
-# state-agent
+# stackpack-state
 
 Agent-first React state management. Schema is the single source of truth — types, validation, transitions, selectors, invariants, and effects all derive from one Zod schema.
 
@@ -6,28 +6,22 @@ Agent-first React state management. Schema is the single source of truth — typ
 
 Activate when:
 - User asks to manage state, create stores, add features with state
-- Project has `state-agent` as a dependency
+- Project has `stackpack-state` as a dependency
 - User mentions Together/Separate/When/Gate patterns
 - User asks to migrate from useState/Redux/Zustand/Jotai/XState
 - User asks to add state to a React project
 
 ## Install
 
-> **WARNING**: The `state-agent` name on npm is taken by an unrelated package. Do NOT run `npm install state-agent` from the public registry — it installs the wrong library. Install from a local path or your private registry:
-
 ```bash
-# Local path (development)
-npm install ../state-agent
-
-# Or add to package.json manually
-"state-agent": "file:../state-agent"
+npm install stackpack-state
 ```
 
-No other dependencies. Zod is bundled — import `z` from `state-agent` directly.
+No other dependencies. Zod is bundled — import `z` from `stackpack-state` directly.
 
 ### Vite Configuration (Required)
 
-When using state-agent with Vite, you must configure aliases. **Order matters** — specific paths must come before general ones:
+When using stackpack-state with Vite, you must configure aliases. **Order matters** — specific paths must come before general ones:
 
 ```typescript
 // vite.config.ts
@@ -36,19 +30,19 @@ import path from 'path'
 export default defineConfig({
   resolve: {
     alias: [
-      // state-agent/react MUST come before state-agent (prefix matching)
-      { find: 'state-agent/react', replacement: path.resolve(__dirname, '../state-agent/runtime/react') },
-      { find: 'state-agent', replacement: path.resolve(__dirname, '../state-agent/runtime/core') },
+      // stackpack-state/react MUST come before stackpack-state (prefix matching)
+      { find: 'stackpack-state/react', replacement: path.resolve(__dirname, '../stackpack-state/runtime/react') },
+      { find: 'stackpack-state', replacement: path.resolve(__dirname, '../stackpack-state/runtime/core') },
     ],
   },
 })
 ```
 
-Do NOT use object-form aliases — `{ 'state-agent': '...' }` swallows `state-agent/react`.
+Do NOT use object-form aliases — `{ 'stackpack-state': '...' }` swallows `stackpack-state/react`.
 
 ### React Dual-Instance Fix
 
-When installed via local path, React may resolve from state-agent's own `node_modules` instead of your app's, causing "Invalid hook call" errors. Fix by pinning React resolution in **both** `vite.config.ts` and `vitest.config.ts`:
+When installed via local path, React may resolve from stackpack-state's own `node_modules` instead of your app's, causing "Invalid hook call" errors. Fix by pinning React resolution in **both** `vite.config.ts` and `vitest.config.ts`:
 
 ```typescript
 resolve: {
@@ -56,9 +50,9 @@ resolve: {
     // Pin React to app's copy (prevents dual-instance errors)
     { find: 'react', replacement: path.resolve(__dirname, 'node_modules/react') },
     { find: 'react-dom', replacement: path.resolve(__dirname, 'node_modules/react-dom') },
-    // state-agent aliases...
-    { find: 'state-agent/react', replacement: path.resolve(__dirname, '../state-agent/runtime/react') },
-    { find: 'state-agent', replacement: path.resolve(__dirname, '../state-agent/runtime/core') },
+    // stackpack-state aliases...
+    { find: 'stackpack-state/react', replacement: path.resolve(__dirname, '../stackpack-state/runtime/react') },
+    { find: 'stackpack-state', replacement: path.resolve(__dirname, '../stackpack-state/runtime/core') },
   ],
 },
 ```
@@ -120,7 +114,7 @@ Use `defineStore` for every store. Pick the right pattern from the catalog below
 
 ```typescript
 // src/state/todos.store.ts
-import { defineStore, z } from 'state-agent'
+import { defineStore, z } from 'stackpack-state'
 
 export const todos = defineStore({ name: 'todos', schema: ..., initial: ... })
 // todos.store → Store<TodosState>  (fully typed, no casting)
@@ -147,7 +141,7 @@ Real apps always have multiple stores. Use `MultiStoreProvider` (not `StoreProvi
 
 ```tsx
 // src/state/provider.tsx
-import { MultiStoreProvider } from 'state-agent/react'
+import { MultiStoreProvider } from 'stackpack-state/react'
 import { auth } from './auth.store'
 import { todos } from './todos.store'
 
@@ -181,7 +175,7 @@ For straightforward state with no mode logic.
 
 ```typescript
 // src/state/settings.store.ts
-import { defineStore, z } from 'state-agent'
+import { defineStore, z } from 'stackpack-state'
 
 export const settings = defineStore({
   name: 'settings',
@@ -203,7 +197,7 @@ For state with mutually exclusive modes. **Eliminates impossible state combinati
 
 ```typescript
 // src/state/users.store.ts
-import { defineStore, z } from 'state-agent'
+import { defineStore, z } from 'stackpack-state'
 
 const UserSchema = z.object({ id: z.string(), name: z.string(), email: z.string() })
 
@@ -244,7 +238,7 @@ For state machines with constrained valid paths.
 
 ```typescript
 // src/state/checkout.store.ts
-import { defineStore, z } from 'state-agent'
+import { defineStore, z } from 'stackpack-state'
 
 export const checkout = defineStore({
   name: 'checkout',
@@ -279,8 +273,8 @@ For stores that combine common patterns (loading, pagination, filtering, selecti
 
 ```typescript
 // src/state/posts.store.ts
-import { defineStore, z } from 'state-agent'
-import { composeStore, Loadable, Paginated, Filterable } from 'state-agent/components'
+import { defineStore, z } from 'stackpack-state'
+import { composeStore, Loadable, Paginated, Filterable } from 'stackpack-state/components'
 
 const PostSchema = z.object({ id: z.string(), title: z.string(), body: z.string() })
 
@@ -311,7 +305,7 @@ For stores that trigger side effects on state changes.
 
 ```typescript
 // src/state/search.store.ts
-import { defineStore, z, createSystemActor } from 'state-agent'
+import { defineStore, z, createSystemActor } from 'stackpack-state'
 
 export const search = defineStore({
   name: 'search',
@@ -348,7 +342,7 @@ For state that survives page reloads.
 
 ```typescript
 // src/state/settings.store.ts
-import { defineStore, z, createMemoryStorage } from 'state-agent'
+import { defineStore, z, createMemoryStorage } from 'stackpack-state'
 
 export const settings = defineStore({
   name: 'settings',
@@ -376,7 +370,7 @@ For instant UI feedback on async operations.
 
 ```typescript
 // In a component or action file:
-import { getDefaultActor } from 'state-agent'
+import { getDefaultActor } from 'stackpack-state'
 
 async function toggleTodo(id: string, currentDone: boolean) {
   await todosStore.optimistic({
@@ -558,8 +552,8 @@ import {
   useStore, useValue, useChange, useUpdate,
   useWhen, useGate, useComputed, useFlow,
   useStoreListener, useAgentStatus,
-} from 'state-agent/react'
-import { Gated, MultiStoreProvider } from 'state-agent/react'
+} from 'stackpack-state/react'
+import { Gated, MultiStoreProvider } from 'stackpack-state/react'
 ```
 
 ### useStore — Full access
@@ -653,7 +647,7 @@ const filter = useValue('todos', todos.select.filter.$path)
 For agents that need to understand the state system at runtime:
 
 ```typescript
-import { storeRegistry } from 'state-agent'
+import { storeRegistry } from 'stackpack-state'
 
 const system = storeRegistry.introspect()
 // Returns:
@@ -674,7 +668,7 @@ const system = storeRegistry.introspect()
 For safely evolving store schemas:
 
 ```typescript
-import { applyMigration, createSystemActor } from 'state-agent'
+import { applyMigration, createSystemActor } from 'stackpack-state'
 
 const result = applyMigration(settingsStore, {
   add: { 'preferences.notifications': { schema: z.boolean(), default: true } },
@@ -715,7 +709,7 @@ The fifth primitive. Presence solves React's fundamental animation problem — R
 
 ```typescript
 // src/state/modal.store.ts
-import { defineStore, z } from 'state-agent'
+import { defineStore, z } from 'stackpack-state'
 
 export const modal = defineStore({
   name: 'modal',
@@ -729,7 +723,7 @@ export const modal = defineStore({
 
 ```tsx
 // Component — CSS transitions, no animation library
-import { Presence } from 'state-agent/react'
+import { Presence } from 'stackpack-state/react'
 
 <Presence store="modal" gate="isOpen" timeout={300}>
   {({ phase, ref }) => (
@@ -751,7 +745,7 @@ Set `timeout` to match the CSS transition duration. The element auto-removes aft
 ### Pattern: usePresence Hook (Direct Control)
 
 ```tsx
-import { usePresence } from 'state-agent/react'
+import { usePresence } from 'stackpack-state/react'
 
 function Modal() {
   const { isPresent, phase, done, ref } = usePresence('modal', 'isOpen', { timeout: 300 })
@@ -771,7 +765,7 @@ The `ref` callback auto-detects `transitionend` events and calls `done()` automa
 ### Pattern: Animated List Items
 
 ```tsx
-import { usePresenceList } from 'state-agent/react'
+import { usePresenceList } from 'stackpack-state/react'
 
 function TodoList() {
   const { items, done, entered } = usePresenceList('todos', 'items', {
@@ -835,7 +829,7 @@ Both elements can overlap briefly during the transition — the skeleton leaves 
 Declare which store data a component reads, writes, and gates. Machine-readable for agent impact analysis. In dev mode, warns when a component reads store paths not declared in its contract.
 
 ```typescript
-import { withContract } from 'state-agent/react'
+import { withContract } from 'stackpack-state/react'
 
 const TodoList = withContract(
   {
@@ -857,7 +851,7 @@ const TodoList = withContract(
 Query contracts programmatically:
 
 ```typescript
-import { findAffectedComponents, findComponentsByAction, findGatedComponents } from 'state-agent/react'
+import { findAffectedComponents, findComponentsByAction, findGatedComponents } from 'stackpack-state/react'
 
 findAffectedComponents('todos', 'items')        // ['TodoList'] — who re-renders when items change?
 findComponentsByAction('todos', 'toggleTodo')    // ['TodoList'] — who calls toggleTodo?
