@@ -688,6 +688,8 @@ Operations apply in order: rename, transform, remove, add. The result is validat
 
 See [refactoring.md](./refactoring.md) for detailed migration guides from useState, Redux, Zustand, Jotai, and XState.
 
+See [migration-example.md](./migration-example.md) for a real-world Zustand migration walkthrough.
+
 ---
 
 ## Presence: Animated Lifecycle
