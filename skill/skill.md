@@ -391,6 +391,42 @@ async function toggleTodo(id: string, currentDone: boolean) {
 
 The framework handles: snapshot before apply, instant UI update, auto-rollback on failure, queue rebase for concurrent operations.
 
+#### Optimistic: Success and Failure Paths
+
+The `commit` promise determines the outcome:
+
+```typescript
+// SUCCESS — commit resolves, mutation persists
+await store.optimistic({
+  apply: (draft) => { draft.items.push(newItem) },
+  commit: () => api.createItem(newItem),       // resolves → mutation is kept
+  reconcile: (draft, response) => {            // optional: merge server data
+    const item = draft.items.find(i => i.id === newItem.id)
+    if (item) item.serverId = response.id
+  },
+  actor,
+})
+
+// FAILURE — commit rejects, mutation rolls back automatically
+await store.optimistic({
+  apply: (draft) => {
+    draft.items = draft.items.filter(i => i.id !== targetId)
+  },
+  commit: () => api.deleteItem(targetId),      // rejects → rollback to pre-apply state
+  actor,
+})
+// After rejection: item reappears in the list as if nothing happened
+```
+
+**Always show the user what happened.** `store.optimistic()` returns `{ success: boolean, error?: Error }` — use it to display status:
+
+```typescript
+const result = await store.optimistic({ apply, commit, actor })
+if (!result.success) {
+  showToast(`Failed: ${result.error?.message}`)
+}
+```
+
 ### Pattern 8: Store with Undo/Redo
 
 For user-facing undo or agent speculative mutation.
@@ -414,6 +450,33 @@ canvas.store.canRedo()                 // boolean
 <button disabled={!canvas.store.canUndo()} onClick={() => canvas.store.undo()}>Undo</button>
 <button disabled={!canvas.store.canRedo()} onClick={() => canvas.store.redo()}>Redo</button>
 ```
+
+### Undo Pitfalls
+
+- **Undo records ALL mutations** — every `set()` and `update()` call pushes to the undo stack, including system-level initialization. If your store starts with `loaded: false` and a timer sets it to `true`, undo can revert `loaded` back to `false`, breaking Gate-controlled UI.
+
+  **Fix**: Separate system state from user state. Either:
+  1. Set system fields (like `loaded`) to their final value in `initial` and use a local React state for any simulated loading delay
+  2. Or create a separate store for system state (without `undo`) and a user store (with `undo`)
+
+  ```typescript
+  // BAD — undo can revert loaded, re-engaging the Gate
+  const store = defineStore({
+    initial: { items: [], loaded: false },
+    undo: { limit: 50 },
+  })
+  setTimeout(() => store.set('loaded', true, actor), 1000)
+
+  // GOOD — loaded starts true, simulated delay is local React state
+  const store = defineStore({
+    initial: { items: [], loaded: true },
+    undo: { limit: 50 },
+  })
+  ```
+
+- **Don't combine undo with Gate on the same field** — if a gate controls mounting and undo can revert the gate condition, the component tree unmounts and the user loses all local state with no recovery path.
+
+- **Undo crosses actor boundaries** — undoing reverts the last mutation regardless of who made it (human or agent). If interleaving human and agent actions, consider whether undo should only revert the current actor's changes (not built-in — filter manually).
 
 ### Pattern 9: Cross-Store Communication (Pub/Sub)
 

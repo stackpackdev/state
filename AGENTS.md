@@ -2,6 +2,21 @@
 
 React state management framework optimized for AI agents. Not an agent itself — a framework that any agent uses to build and manage app state.
 
+## IMPORTANT: Read the Skill Docs First
+
+Before writing ANY state code, read the skill docs. They ship with the npm package:
+
+```
+node_modules/stackpack-state/skill/skill.md         ← START HERE: patterns, decision trees, pitfalls
+node_modules/stackpack-state/skill/api-reference.md  ← Full API: every hook, component, type signature
+node_modules/stackpack-state/skill/examples.md       ← Real-world examples
+node_modules/stackpack-state/skill/refactoring.md    ← Migration from useState/Redux/Zustand/Jotai/XState
+```
+
+If developing from a local clone, the paths are relative: `skill/skill.md`, etc.
+
+**Why this matters:** The framework has specific APIs (like `usePresenceList` for animated lists, `store.optimistic()` for rollback) that you will not discover from type definitions alone. The skill docs contain patterns, pitfalls, and decision trees that prevent common mistakes.
+
 ## What It Is
 
 A runtime library (`npm install stackpack-state`) with 5 reasoning primitives:
@@ -15,15 +30,16 @@ A runtime library (`npm install stackpack-state`) with 5 reasoning primitives:
 ## Architecture
 
 ```
-stackpack-state/           → core runtime (createStore, actors, flows, fetchers)
-stackpack-state/react      → React bindings (hooks, providers, <Gated>)
+stackpack-state/           → core runtime (defineStore, actors, flows, effects, optimistic, undo)
+stackpack-state/react      → React bindings (hooks, providers, <Gated>, <Presence>, usePresenceList)
+stackpack-state/components → ECS-style composable state (Loadable, Paginated, Filterable, Selectable)
 ```
 
 ## File Conventions
 
 | File | Purpose |
 |------|---------|
-| `name.store.ts` | Zod schema + inferred type + createStore + when/gates |
+| `name.store.ts` | Zod schema + inferred type + defineStore + when/gates/computed |
 | `name.flow.ts` | Flow state machine (multi-step processes) |
 | `src/state/index.ts` | Barrel exports |
 | `src/state/provider.tsx` | MultiStoreProvider wrapping the app |
@@ -40,11 +56,13 @@ export const name = defineStore({
   when: { /* style-edge conditions */ },
   gates: { /* mount-edge conditions */ },
   computed: { /* derived values */ },
+  effects: { /* reactive side effects */ },
+  undo: { limit: 50 },            // optional: enable undo/redo
+  persist: { key: 'name' },       // optional: localStorage persistence
   dependencies: { reads: [], gatedBy: [], triggers: [] },
 })
 // name.store → Store<NameState>
 // name.schema → ZodObject<...>
-```
 ```
 
 ## Key Rules
@@ -60,10 +78,19 @@ export const name = defineStore({
 9. Actions are self-contained — receive all data as parameters, never close over external state
 10. Use `MultiStoreProvider` for app-level state (not `StoreProvider`)
 
+## Common Pitfalls (Read These)
+
+1. **Undo records ALL mutations** — including system `set()` calls. If undo can revert a Gate condition (like `loaded: false`), the UI breaks. Separate system state from user state.
+2. **Presence reads gates, not when** — `usePresence` and `usePresenceList` require a gate on the store.
+3. **Use `usePresenceList` for animated lists** — not `<Presence>` component (which is for single boolean gates like modals). Iterate `presence.items`, not the raw store array.
+4. **Vite alias order matters** — `stackpack-state/react` must come BEFORE `stackpack-state` in alias array.
+5. **React dual-instance errors** — when using local file link, pin `react` and `react-dom` in `resolve.alias`.
+6. **Don't manually hydrate if using `persist`** — persist handles localStorage automatically.
+
 ## Runtime Source
 
 - Core: `runtime/core/` — store, actor, flow, when, fetch, path, history, middleware, batch, together
-- React: `runtime/react/` — hooks, provider, context, gated, use-fetch
+- React: `runtime/react/` — hooks, provider, context, gated, presence, use-presence, use-fetch
 - Tests: `runtime/core/__tests__/` and `runtime/react/__tests__/`
 
 ## Install Troubleshooting
@@ -80,6 +107,6 @@ See `skill/skill.md` Install section for complete Vite config examples.
 Read the skill docs in `skill/` for the complete guide:
 
 - `skill/skill.md` — Entry point. Pattern catalog, decision trees, all store patterns (modes, transitions, effects, persistence, optimistic, undo, pub/sub, properties, ECS composition, backend sync)
+- `skill/api-reference.md` — Complete API reference for every export including Presence hooks
 - `skill/refactoring.md` — Step-by-step migration from useState, Redux, Zustand, Jotai, XState
-- `skill/api-reference.md` — Complete API reference for every export
 - `skill/examples.md` — Real-world examples (todo app, auth dashboard, checkout, search, data tables)

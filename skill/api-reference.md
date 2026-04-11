@@ -485,13 +485,72 @@ function useAgentStatus(storeName: string, agentId: string): string | undefined
 function useStoreListener<T>(storeName: string, listener: Listener<T>, path?: string): void
 ```
 
+### Presence Hooks
+
+```typescript
+// Single-item presence (boolean gate → animated mount/unmount)
+function usePresence(
+  storeName: string,
+  gateName: string,
+  options?: { timeout?: number }       // default: 300ms
+): UsePresenceResult
+
+interface UsePresenceResult {
+  isPresent: boolean                    // true during entering, present, AND leaving
+  phase: 'entering' | 'present' | 'leaving' | null
+  done: () => void                     // signal leave animation complete
+  entered: () => void                  // signal enter animation complete
+  ref: React.RefCallback<HTMLElement>  // auto-detects CSS transitionend
+}
+
+// List presence (array items → per-item animated enter/leave)
+function usePresenceList<T>(
+  storeName: string,
+  path: string,                        // dot-path to array in store state
+  options?: {
+    timeout?: number                   // leave timeout in ms (default: 300)
+    keyFn?: (item: T) => string        // extract stable key (default: item.id)
+  }
+): UsePresenceListResult<T>
+
+interface UsePresenceListResult<T> {
+  items: PresenceRecord<T>[]           // all items including departing ones
+  done: (key: string) => void          // signal item's leave animation done
+  entered: (key: string) => void       // signal item's enter animation done
+  flush: () => void                    // remove all leaving items immediately
+}
+
+interface PresenceRecord<T> {
+  key: string                          // stable identity
+  value: T                             // actual data (frozen at leave time for leaving items)
+  phase: 'entering' | 'present' | 'leaving'
+  at: number                           // timestamp when phase started
+}
+```
+
+**When to use which:**
+- `usePresence` — single boolean gate: modals, panels, toasts
+- `usePresenceList` — array of items: todo lists, notifications, cards
+- `<Presence>` component — render-prop wrapper around `usePresence`
+
+**Important:** Iterate over `presence.items` (not the raw store array) to render — it includes items in the `leaving` phase that are already removed from the store but still need to render for their exit animation.
+
 ### Components
 
 ```tsx
-// Conditional mounting
+// Conditional mounting (immediate unmount when gate closes)
 <Gated store="storeName" gate="gateName" fallback={<Fallback />}>
   {children}
 </Gated>
+
+// Animated conditional mounting (deferred unmount for leave animation)
+<Presence store="storeName" gate="gateName" timeout={300}>
+  {({ phase, done, entered, ref }) => (
+    <div ref={ref} className={`element element--${phase}`}>
+      {children}
+    </div>
+  )}
+</Presence>
 
 // Store providers
 <StoreProvider store={myStore}>{children}</StoreProvider>
