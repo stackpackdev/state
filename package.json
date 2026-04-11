@@ -77,6 +77,8 @@
     "dist/runtime/react",
     "dist/runtime/components",
     "skill/",
+    "SKILL.md",
+    "AGENTS.md",
     "README.md",
     "LICENSE"
   ],
