@@ -84,10 +84,14 @@ export interface Store<T = any> {
     getState(): T;
     /** Path-based read — from Data.js lodash get pattern */
     get<V = unknown>(path?: string): V;
-    /** Path-based write — actor optional (falls back to default human actor) */
-    set(path: string, value: unknown, actor?: Actor): void;
-    /** Immer mutation — actor optional (falls back to default human actor) */
-    update(fn: (draft: T) => void, actor?: Actor): void;
+    /** Path-based write — actor optional (falls back to default human actor). Pass { skipUndo: true } to exclude from undo history. */
+    set(path: string, value: unknown, actor?: Actor, options?: {
+        skipUndo?: boolean;
+    }): void;
+    /** Immer mutation — actor optional (falls back to default human actor). Pass { skipUndo: true } to exclude from undo history. */
+    update(fn: (draft: T) => void, actor?: Actor, options?: {
+        skipUndo?: boolean;
+    }): void;
     /** Reset to new value — actor optional (falls back to default human actor) */
     reset(value: T, actor?: Actor): void;
     /** Delete a path from state — actor optional (falls back to default human actor) */
@@ -134,6 +138,8 @@ export interface Store<T = any> {
     canUndo(): boolean;
     /** Check if redo is available */
     canRedo(): boolean;
+    /** Clear undo and redo stacks. Use after system initialization to prevent undo from reverting past startup state. */
+    clearUndoStack(): void;
     /** Clean up store */
     destroy(): void;
 }

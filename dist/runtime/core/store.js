@@ -200,8 +200,9 @@ export function createStore(options) {
     }
     function applyAction(action) {
         const prevState = state;
-        // Capture undo snapshot before mutation
-        if (undoEnabled) {
+        // Capture undo snapshot before mutation (skip if action.meta.skipUndo)
+        const shouldUndo = undoEnabled && !action.meta?.skipUndo;
+        if (shouldUndo) {
             undoStack.push(structuredClone(prevState));
             if (undoStack.length > undoLimit) {
                 undoStack.shift(); // drop oldest snapshot
@@ -215,12 +216,12 @@ export function createStore(options) {
             return state;
         });
         if (cancelled) {
-            if (undoEnabled)
+            if (shouldUndo)
                 undoStack.pop(); // remove unused snapshot
             return;
         }
         // If state didn't change, remove the unnecessary snapshot
-        if (undoEnabled && state === prevState) {
+        if (shouldUndo && state === prevState) {
             undoStack.pop();
         }
         // Validate resulting state against Zod schema
@@ -229,7 +230,7 @@ export function createStore(options) {
             if (!result.success) {
                 // Roll back to previous state
                 state = prevState;
-                if (undoEnabled)
+                if (shouldUndo)
                     undoStack.pop(); // remove snapshot for rejected mutation
                 if (process.env.NODE_ENV === 'development') {
                     console.warn(`[state-agent] Store "${name}": mutation rejected by schema:\n` +
@@ -246,7 +247,7 @@ export function createStore(options) {
                 // Enforce transition graph if declared
                 if (transitionGraph && !transitionGraph.canTransition(prevMode, nextMode)) {
                     state = prevState;
-                    if (undoEnabled)
+                    if (shouldUndo)
                         undoStack.pop(); // remove snapshot for rejected transition
                     const validTargetsList = transitionGraph.validTargets(prevMode);
                     const validDesc = validTargetsList.length > 0
@@ -333,7 +334,7 @@ export function createStore(options) {
         get(path) {
             return getPath(state, path);
         },
-        set(path, value, actor) {
+        set(path, value, actor, options) {
             const resolved = actor ?? getDefaultActor();
             if (!canAct(resolved, 'write', path)) {
                 if (process.env.NODE_ENV === 'development') {
@@ -348,9 +349,10 @@ export function createStore(options) {
                 value,
                 actor: resolved,
                 timestamp: Date.now(),
+                meta: options?.skipUndo ? { skipUndo: true } : undefined,
             });
         },
-        update(fn, actor) {
+        update(fn, actor, options) {
             const resolved = actor ?? getDefaultActor();
             if (!canAct(resolved, 'write', '*')) {
                 if (process.env.NODE_ENV === 'development') {
@@ -364,6 +366,7 @@ export function createStore(options) {
                 fn,
                 actor: resolved,
                 timestamp: Date.now(),
+                meta: options?.skipUndo ? { skipUndo: true } : undefined,
             });
         },
         reset(value, actor) {
@@ -532,6 +535,10 @@ export function createStore(options) {
         },
         canRedo() {
             return undoEnabled && redoStack.length > 0;
+        },
+        clearUndoStack() {
+            undoStack.length = 0;
+            redoStack.length = 0;
         },
         optimistic: null,
         destroy() {

@@ -182,4 +182,68 @@ describe('undo/redo', () => {
     store.redo()
     expect(store.getState()).toEqual({ items: ['a', 'b', 'c'] })
   })
+
+  it('skipUndo on set() excludes mutation from undo stack', () => {
+    const store = createStore({ name: 'skip-set', initial: { count: 0, loaded: false }, undo: { limit: 10 } })
+    // System mutation — should not be undoable
+    store.set('loaded', true, user, { skipUndo: true })
+    expect(store.getState()).toEqual({ count: 0, loaded: true })
+    expect(store.canUndo()).toBe(false)
+
+    // User mutation — should be undoable
+    store.set('count', 1, user)
+    expect(store.canUndo()).toBe(true)
+
+    // Undo only reverts count, not loaded
+    store.undo()
+    expect(store.getState()).toEqual({ count: 0, loaded: true })
+  })
+
+  it('skipUndo on update() excludes mutation from undo stack', () => {
+    const store = createStore({ name: 'skip-update', initial: { items: ['a'], ready: false }, undo: { limit: 10 } })
+    store.update((d: any) => { d.ready = true }, user, { skipUndo: true })
+    expect(store.getState().ready).toBe(true)
+    expect(store.canUndo()).toBe(false)
+
+    store.update((d: any) => { d.items.push('b') }, user)
+    expect(store.canUndo()).toBe(true)
+
+    store.undo()
+    expect(store.getState()).toEqual({ items: ['a'], ready: true })
+  })
+
+  it('clearUndoStack() clears both stacks', () => {
+    const store = createStore({ name: 'clear-stack', initial: { count: 0 }, undo: { limit: 10 } })
+    store.set('count', 1, user)
+    store.set('count', 2, user)
+    expect(store.canUndo()).toBe(true)
+
+    store.undo()
+    expect(store.canRedo()).toBe(true)
+
+    store.clearUndoStack()
+    expect(store.canUndo()).toBe(false)
+    expect(store.canRedo()).toBe(false)
+    // State is preserved
+    expect(store.getState()).toEqual({ count: 1 })
+  })
+
+  it('clearUndoStack() after init prevents undo past startup', () => {
+    const store = createStore({ name: 'clear-init', initial: { count: 0, loaded: false }, undo: { limit: 10 } })
+    // Simulate initialization
+    store.set('loaded', true, user)
+    store.clearUndoStack()
+
+    // Now user makes changes
+    store.set('count', 1, user)
+    store.set('count', 2, user)
+
+    // Can undo user changes but not past clearUndoStack point
+    store.undo()
+    expect(store.getState()).toEqual({ count: 1, loaded: true })
+    store.undo()
+    expect(store.getState()).toEqual({ count: 0, loaded: true })
+    // No more undos — loaded stays true
+    expect(store.canUndo()).toBe(false)
+  })
 })
