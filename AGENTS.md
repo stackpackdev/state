@@ -80,7 +80,7 @@ export const name = defineStore({
 
 ## Common Pitfalls (Read These)
 
-1. **Undo records ALL mutations** — including system `set()` calls. If undo can revert a Gate condition (like `loaded: false`), the UI breaks. Separate system state from user state.
+1. **Undo records ALL mutations by default** — use `store.set(path, value, actor, { skipUndo: true })` for system mutations, or `store.clearUndoStack()` after initialization. If undo can revert a Gate condition (like `loaded: false`), the UI breaks.
 2. **Presence reads gates, not when** — `usePresence` and `usePresenceList` require a gate on the store.
 3. **Use `usePresenceList` for animated lists** — not `<Presence>` component (which is for single boolean gates like modals). Iterate `presence.items`, not the raw store array.
 4. **Vite alias order matters** — `stackpack-state/react` must come BEFORE `stackpack-state` in alias array.

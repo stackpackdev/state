@@ -57,9 +57,9 @@ interface Store<T> {
   get<V>(path?: string): V
   has(path: string): boolean
 
-  // Write (all require Actor)
-  set(path: string, value: unknown, actor: Actor): void
-  update(fn: (draft: T) => void, actor: Actor): void
+  // Write (all require Actor, options optional)
+  set(path: string, value: unknown, actor?: Actor, options?: { skipUndo?: boolean }): void
+  update(fn: (draft: T) => void, actor?: Actor, options?: { skipUndo?: boolean }): void
   reset(value: T, actor: Actor): void
   delete(path: string, actor: Actor): void
 
@@ -94,6 +94,7 @@ interface Store<T> {
   redo(count?: number, actor?: Actor): number
   canUndo(): boolean
   canRedo(): boolean
+  clearUndoStack(): void            // clear undo+redo stacks (e.g. after init)
 
   // Metadata
   getDependencies(): StoreDependencies

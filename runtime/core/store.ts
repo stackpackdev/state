@@ -265,8 +265,9 @@ export function createStore<T = any>(options: StoreOptions<T>): Store<T> {
   function applyAction(action: Action): void {
     const prevState = state
 
-    // Capture undo snapshot before mutation
-    if (undoEnabled) {
+    // Capture undo snapshot before mutation (skip if action.meta.skipUndo)
+    const shouldUndo = undoEnabled && !action.meta?.skipUndo
+    if (shouldUndo) {
       undoStack.push(structuredClone(prevState))
       if (undoStack.length > undoLimit) {
         undoStack.shift() // drop oldest snapshot
@@ -286,12 +287,12 @@ export function createStore<T = any>(options: StoreOptions<T>): Store<T> {
     )
 
     if (cancelled) {
-      if (undoEnabled) undoStack.pop() // remove unused snapshot
+      if (shouldUndo) undoStack.pop() // remove unused snapshot
       return
     }
 
     // If state didn't change, remove the unnecessary snapshot
-    if (undoEnabled && state === prevState) {
+    if (shouldUndo && state === prevState) {
       undoStack.pop()
     }
 
@@ -301,7 +302,7 @@ export function createStore<T = any>(options: StoreOptions<T>): Store<T> {
       if (!result.success) {
         // Roll back to previous state
         state = prevState
-        if (undoEnabled) undoStack.pop() // remove snapshot for rejected mutation
+        if (shouldUndo) undoStack.pop() // remove snapshot for rejected mutation
         if (process.env.NODE_ENV === 'development') {
           console.warn(
             `[state-agent] Store "${name}": mutation rejected by schema:\n` +
@@ -320,7 +321,7 @@ export function createStore<T = any>(options: StoreOptions<T>): Store<T> {
         // Enforce transition graph if declared
         if (transitionGraph && !transitionGraph.canTransition(prevMode, nextMode)) {
           state = prevState
-          if (undoEnabled) undoStack.pop() // remove snapshot for rejected transition
+          if (shouldUndo) undoStack.pop() // remove snapshot for rejected transition
           const validTargetsList = transitionGraph.validTargets(prevMode)
           const validDesc = validTargetsList.length > 0
             ? validTargetsList.map(t => {
@@ -425,7 +426,7 @@ export function createStore<T = any>(options: StoreOptions<T>): Store<T> {
       return getPath(state, path) as V
     },
 
-    set(path: string, value: unknown, actor?: Actor) {
+    set(path: string, value: unknown, actor?: Actor, options?: { skipUndo?: boolean }) {
       const resolved = actor ?? getDefaultActor()
       if (!canAct(resolved, 'write', path)) {
         if (process.env.NODE_ENV === 'development') {
@@ -443,10 +444,11 @@ export function createStore<T = any>(options: StoreOptions<T>): Store<T> {
         value,
         actor: resolved,
         timestamp: Date.now(),
+        meta: options?.skipUndo ? { skipUndo: true } : undefined,
       })
     },
 
-    update(fn: (draft: T) => void, actor?: Actor) {
+    update(fn: (draft: T) => void, actor?: Actor, options?: { skipUndo?: boolean }) {
       const resolved = actor ?? getDefaultActor()
       if (!canAct(resolved, 'write', '*')) {
         if (process.env.NODE_ENV === 'development') {
@@ -463,6 +465,7 @@ export function createStore<T = any>(options: StoreOptions<T>): Store<T> {
         fn,
         actor: resolved,
         timestamp: Date.now(),
+        meta: options?.skipUndo ? { skipUndo: true } : undefined,
       })
     },
 
@@ -646,6 +649,11 @@ export function createStore<T = any>(options: StoreOptions<T>): Store<T> {
 
     canRedo(): boolean {
       return undoEnabled && redoStack.length > 0
+    },
+
+    clearUndoStack() {
+      undoStack.length = 0
+      redoStack.length = 0
     },
 
     optimistic: null as any,

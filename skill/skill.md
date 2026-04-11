@@ -453,28 +453,21 @@ canvas.store.canRedo()                 // boolean
 
 ### Undo Pitfalls
 
-- **Undo records ALL mutations** — every `set()` and `update()` call pushes to the undo stack, including system-level initialization. If your store starts with `loaded: false` and a timer sets it to `true`, undo can revert `loaded` back to `false`, breaking Gate-controlled UI.
+- **Undo records ALL mutations by default** — every `set()` and `update()` call pushes to the undo stack, including system-level initialization. If your store starts with `loaded: false` and a timer sets it to `true`, undo can revert `loaded` back to `false`, breaking Gate-controlled UI.
 
-  **Fix**: Separate system state from user state. Either:
-  1. Set system fields (like `loaded`) to their final value in `initial` and use a local React state for any simulated loading delay
-  2. Or create a separate store for system state (without `undo`) and a user store (with `undo`)
+  **Fix**: Use `{ skipUndo: true }` for system mutations, or `clearUndoStack()` after initialization:
 
   ```typescript
-  // BAD — undo can revert loaded, re-engaging the Gate
-  const store = defineStore({
-    initial: { items: [], loaded: false },
-    undo: { limit: 50 },
-  })
-  setTimeout(() => store.set('loaded', true, actor), 1000)
+  // Option 1: skipUndo on system mutations
+  store.set('loaded', true, systemActor, { skipUndo: true })
+  store.update((d) => { d.ready = true }, systemActor, { skipUndo: true })
 
-  // GOOD — loaded starts true, simulated delay is local React state
-  const store = defineStore({
-    initial: { items: [], loaded: true },
-    undo: { limit: 50 },
-  })
+  // Option 2: clear undo stack after initialization
+  store.set('loaded', true, systemActor)
+  store.clearUndoStack()  // user can't undo past this point
   ```
 
-- **Don't combine undo with Gate on the same field** — if a gate controls mounting and undo can revert the gate condition, the component tree unmounts and the user loses all local state with no recovery path.
+- **Don't combine undo with Gate on the same field** — if a gate controls mounting and undo can revert the gate condition, the component tree unmounts and the user loses all local state with no recovery path. Use `{ skipUndo: true }` for gate-controlling mutations.
 
 - **Undo crosses actor boundaries** — undoing reverts the last mutation regardless of who made it (human or agent). If interleaving human and agent actions, consider whether undo should only revert the current actor's changes (not built-in — filter manually).
 
